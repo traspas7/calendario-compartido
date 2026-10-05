@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nuestro calendario</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f4ef;--card:#fff;--ink:#1d2330;--mute:#7a8191;--line:#e4e1d8;--a:#00F0FF;--b:#00FF26;--ab:#c98a00;--sel:#1d2330;}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--card:#1b202b;--ink:#eef0f5;--mute:#98a0b2;--line:#2b3140;--a:#00F0FF;--b:#00FF26;--ab:#f0b73a;--sel:#eef0f5;}}
+:root[data-theme="dark"]{--bg:#12151c;--card:#1b202b;--ink:#eef0f5;--mute:#98a0b2;--line:#2b3140;--a:#00F0FF;--b:#00FF26;--ab:#f0b73a;--sel:#eef0f5;}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;max-width:560px;margin-inline:auto;padding:14px 10px 90px}
+header{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 10px}
+h1{font-size:1.7rem;font-weight:800;margin:0;letter-spacing:-.02em;text-transform:capitalize}
+.nav{display:flex;gap:6px}
+button{font:inherit;color:inherit;cursor:pointer}
+.ib{border:1px solid var(--line);background:var(--card);border-radius:12px;min-width:42px;height:42px;font-size:1.1rem}
+.ib:focus-visible,.cell:focus-visible,.chip:focus-visible,.cta:focus-visible{outline:3px solid var(--ab);outline-offset:2px}
+.legend{display:flex;gap:8px;padding:0 4px 12px;flex-wrap:wrap}
+.lg{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--mute)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.wk,.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wk{color:var(--mute);font-size:.75rem;text-align:center;padding-bottom:4px}
+.cell{min-height:74px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:5px 4px;text-align:left;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.cell.out{opacity:.38}
+.cell .n{font-size:.8rem;font-weight:600;padding-left:2px}
+.cell.today .n{background:var(--sel);color:var(--bg);border-radius:8px;display:inline-block;width:fit-content;padding:0 6px}
+.p{font-size:.68rem;font-weight:800;border-radius:6px;padding:1px 4px;color:#06181b;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p.a{background:var(--a)}.p.b{background:var(--b)}.p.ab{background:var(--ab)}
+.p.l{background:transparent;color:var(--mute);border:1px dashed var(--line)}
+.p.plan{background:transparent;color:var(--ink);font-weight:600;border:1.5px solid var(--line)}
+.p.plan.a{border-color:var(--a)}.p.plan.b{border-color:var(--b)}.p.plan.ab{border-color:var(--ab)}
+.more{font-size:.65rem;color:var(--mute)}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;pointer-events:none}
+.cta{pointer-events:auto;background:var(--sel);color:var(--bg);border:0;border-radius:16px;padding:13px 14px;font-weight:800;font-size:.92rem;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.back{position:fixed;inset:0;background:rgba(10,12,18,.5);display:none;align-items:flex-end;justify-content:center;z-index:5}
+.back.on{display:flex}
+.sheet{background:var(--card);width:100%;max-width:560px;max-height:88vh;overflow-y:auto;border-radius:22px 22px 0 0;padding:18px 16px calc(22px + env(safe-area-inset-bottom,0px));animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@media(prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet h2{margin:0 0 12px;font-size:1.25rem;text-transform:capitalize}
+.sheet h3{font-size:.9rem;margin:16px 0 8px;color:var(--mute);font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:transparent;border-radius:12px;padding:9px 14px;font-weight:600}
+.chip.on{border-color:var(--sel);background:var(--sel);color:var(--bg)}
+.ev{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);gap:8px}
+.ev span{display:flex;align-items:center;gap:8px}
+.x{border:0;background:transparent;color:var(--mute);font-size:1.3rem;padding:4px 10px}
+input,select,textarea{font:inherit;color:inherit;background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.empty{color:var(--mute);font-size:.9rem;padding:6px 0}
+.st{text-align:center;color:var(--mute);font-size:.75rem;margin-top:14px}
+.full{width:100%;margin-top:14px;padding:13px;border-radius:14px;border:0;background:var(--sel);color:var(--bg);font-weight:800}
+.seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:0 4px 10px;background:var(--card)}
+.seg button{flex:1;border:0;background:transparent;padding:9px;font-weight:600}
+.seg button.on{background:var(--sel);color:var(--bg)}
+.wh{display:grid;grid-template-columns:54px 1fr 1fr;gap:6px;font-size:.78rem;color:var(--mute);padding:0 8px 2px;font-weight:600}
+.wlist{display:flex;flex-direction:column;gap:6px}
+.wrow{display:grid;grid-template-columns:54px 1fr;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:left;align-items:start}
+.wrow.today{border:2px solid var(--sel)}
+.wd{display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.wd b{font-size:1.35rem}.wd small{color:var(--mute);font-size:.72rem}
+.wc{display:flex;flex-direction:column;gap:4px}
+.wp{grid-column:2;display:flex;gap:4px;flex-wrap:wrap}
+.wrow .p{font-size:.78rem;padding:4px 8px;border-radius:8px;white-space:normal}
+.bar{gap:8px}
+.cta.sec{background:var(--card);color:var(--ink);border:1.5px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1>
+  <div class="nav"><button class="ib" id="prev" aria-label="Mes anterior">‹</button><button class="ib" id="today">Hoy</button><button class="ib" id="next" aria-label="Mes siguiente">›</button></div>
+</header>
+<div class="seg" id="seg"><button data-m="month" class="on">Mes</button><button data-m="week">Semana</button></div>
+<div class="legend" id="legend"></div>
+<div class="wk" id="wkh"><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div></div>
+<div class="grid" id="grid"></div>
+<div class="st" id="st"></div>
+<div class="bar"><button class="cta sec" id="open-photo">📋 Pegar</button><button class="cta sec" id="open-range">Horarios</button><button class="cta" id="open-act">＋ Actividad</button></div>
+<div class="back" id="back"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<script>
+/* === CONFIGURACIÓN: pega aquí los dos datos de Supabase === */
+const SB_URL='PEGA_AQUI_LA_URL';
+const SB_KEY='PEGA_AQUI_LA_CLAVE';
+/* =========================================================== */
+const SHIFTS={M:{l:'Mañana',t:'7:00–15:00'},T:{l:'Tarde',t:'15:00–23:00'},N:{l:'Noche',t:'23:00–7:00'},FM:{l:'Finde mañana',t:'7:00–19:00'},FT:{l:'Finde tarde',t:'15:00–3:00'},FN:{l:'Finde noche',t:'23:00–11:00'},L:{l:'Libre',t:''}};
+const EMOJIS=['🥾','🔫','🐶','🎬','🍽️','✈️','🎉','🏋️','👪'];
+const MONTHS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DAYS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+let names={a:'Dani',b:'Eva'},events=[],view=new Date(),who='a',store=null,mode='month',wk=null;
+view.setDate(1);
+const $=s=>document.querySelector(s);
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const ORD={a:0,b:1,ab:2};
+const who2=w=>w==='ab'?'Juntos':names[w];
+const lab=e=>e.code==='L'?'Libre':e.code==='H'?(e.hours||'').split('–')[0]:e.code;
+const info=e=>e.code==='H'?{l:'Horario',t:e.hours||''}:SHIFTS[e.code];
+
+/* ---------- almacenamiento: db compartida o, si no hay, este dispositivo ---------- */
+function localStore(){
+  const K='cal-pareja';let list=[];
+  try{list=JSON.parse(localStorage.getItem(K)||'[]')}catch(e){}
+  const save=()=>{try{localStorage.setItem(K,JSON.stringify(list))}catch(e){}};
+  let cb=()=>{};
+  return{shared:false,
+    subscribe(f){cb=f;cb(list)},
+    async add(e){list.push({...e,id:'l'+Date.now()+Math.random().toString(36).slice(2,6)});save();cb(list)},
+    async del(id){list=list.filter(x=>x.id!==id);save();cb(list)},
+    async setNames(n){try{localStorage.setItem(K+'-n',JSON.stringify(n))}catch(e){}},
+    loadNames(f){try{const n=JSON.parse(localStorage.getItem(K+'-n'));if(n)f(n)}catch(e){}}};
+}
+async function dbStore(db){
+  const col=db.collection('events');
+  return{shared:true,
+    subscribe(f){col.onSnapshot(s=>f((s.docs||[]).map(d=>({...(d.data?d.data():d),id:d.id}))),()=>{})},
+    async add(e){await col.add(e)},
+    async del(id){await col.doc(id).delete()},
+    async setNames(n){await db.doc('settings/names').set(n)},
+    loadNames(f){db.doc('settings/names').onSnapshot(s=>{const v=s.data?s.data():null;if(v&&v.a)f(v)},()=>{})}};
+}
+
+/* ---------- vistas ---------- */
+function monday(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
+function render(){
+  $('#legend').innerHTML=[['a',names.a],['b',names.b],['ab','Juntos']].map(([k,n])=>`<span class="lg"><i class="dot" style="background:var(--${k})"></i>${esc(n)}</span>`).join('');
+  $('#seg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
+  const td=ymd(new Date()),by={};
+  events.forEach(e=>(by[e.date]=by[e.date]||[]).push(e));
+  $('#grid').className=mode==='month'?'grid':'wlist';
+  $('#wkh').style.display=mode==='month'?'':'none';
+  if(mode==='week')return renderWeek(by,td);
+  $('#title').textContent=MONTHS[view.getMonth()]+' '+view.getFullYear();
+  const first=new Date(view.getFullYear(),view.getMonth(),1);
+  const start=new Date(first);start.setDate(1-(first.getDay()+6)%7);
+  let h='';
+  for(let i=0;i<42;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);
+    if(i>=35&&d.getMonth()!==view.getMonth())break;
+    const k=ymd(d),ev=(by[k]||[]).sort((x,y)=>(x.kind==='shift'?0:1)-(y.kind==='shift'?0:1)||ORD[x.who]-ORD[y.who]);
+    const pills=ev.slice(0,3).map(e=>e.kind==='shift'
+      ?`<span class="p ${e.who}${e.code==='L'?' l':''}">${lab(e)}</span>`
+      :`<span class="p plan ${e.who}">${e.emoji||'📌'} ${esc(e.title||'')}</span>`).join('');
+    h+=`<button class="cell${d.getMonth()!==view.getMonth()?' out':''}${k===td?' today':''}" data-d="${k}" aria-label="${d.getDate()} de ${MONTHS[d.getMonth()]}"><span class="n">${d.getDate()}</span>${pills}${ev.length>3?`<span class="more">+${ev.length-3}</span>`:''}</button>`;
+  }
+  $('#grid').innerHTML=h;
+}
+function renderWeek(by,td){
+  const s=wk,e=new Date(s);e.setDate(s.getDate()+6);
+  $('#title').textContent=s.getDate()+(s.getMonth()!==e.getMonth()?' '+MONTHS[s.getMonth()].slice(0,3):'')+'–'+e.getDate()+' '+MONTHS[e.getMonth()].slice(0,3);
+  let h='';
+  for(let i=0;i<7;i++){
+    const d=new Date(s);d.setDate(s.getDate()+i);const k=ymd(d),ev=by[k]||[];
+    const sh=w=>ev.filter(x=>x.kind==='shift'&&x.who===w).map(x=>`<span class="p ${x.who}${x.code==='L'?' l':''}">${esc(names[w])}: ${x.code==='L'?'Libre':x.code==='H'?x.hours:x.code+' '+SHIFTS[x.code].t}</span>`).join('');
+    const rest=ev.filter(x=>x.kind!=='shift'||x.who==='ab').map(x=>x.kind==='shift'?`<span class="p ab">Juntos: ${x.code}</span>`:`<span class="p plan ${x.who}">${x.emoji||'📌'} ${esc(x.title||'')}${x.hours?' · '+x.hours:''}</span>`).join('');
+    h+=`<button class="wrow${k===td?' today':''}" data-d="${k}"><span class="wd"><b>${d.getDate()}</b><small>${DAYS[d.getDay()].slice(0,3)}</small></span><span class="wc">${sh('a')}${sh('b')}</span>${rest?`<span class="wp">${rest}</span>`:''}</button>`;
+  }
+  $('#grid').innerHTML=h;
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- hojas ---------- */
+const openSheet=h=>{$('#sheet').innerHTML=h;$('#back').classList.add('on')};
+const closeSheet=()=>$('#back').classList.remove('on');
+$('#back').addEventListener('click',e=>{if(e.target.id==='back')closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+
+function whoChips(){return ['a','b','ab'].map(k=>`<button class="chip${who===k?' on':''}" data-who="${k}">${who2(k)}</button>`).join('')}
+
+function openDay(k){
+  const d=parse(k),ev=events.filter(e=>e.date===k).sort((x,y)=>ORD[x.who]-ORD[y.who]);
+  let h=`<h2>${DAYS[d.getDay()]} ${d.getDate()} de ${MONTHS[d.getMonth()]}</h2>`;
+  h+=ev.length?ev.map(e=>`<div class="ev"><span><i class="dot" style="background:var(--${e.who})"></i><b>${who2(e.who)}</b> ${e.kind==='shift'?info(e).l+(info(e).t?' · '+info(e).t:''):(e.emoji||'📌')+' '+esc(e.title||'')+(e.hours?' · '+e.hours:'')}</span><button class="x" data-del="${e.id}" aria-label="Quitar">×</button></div>`).join(''):'<div class="empty">Sin nada apuntado. Añade un turno o un plan.</div>';
+  h+=`<h3>¿De quién?</h3><div class="row" id="who">${whoChips()}</div>`;
+  h+=`<h3>Turno</h3><div class="row">${Object.keys(SHIFTS).map(c=>`<button class="chip" data-shift="${c}">${SHIFTS[c].l}</button>`).join('')}</div>`;
+  h+=`<h3>Plan</h3><div class="row" id="em">${EMOJIS.map((e,i)=>`<button class="chip${i?'':' on'}" data-em="${e}">${e}</button>`).join('')}</div>
+  <div class="f" style="margin-top:8px;grid-template-columns:1fr auto"><input id="pt" placeholder="Excursión, airsoft…" maxlength="40"><button class="chip" id="addplan">Añadir</button></div><button class="chip" id="act" style="margin-top:8px">Actividad con horas…</button>`;
+  openSheet(h);
+  let em=EMOJIS[0];
+  const sh=$('#sheet');
+  sh.onclick=async e=>{
+    const t=e.target.closest('button');if(!t)return;
+    if(t.dataset.who){who=t.dataset.who;$('#who').innerHTML=whoChips();return}
+    if(t.dataset.em){em=t.dataset.em;sh.querySelectorAll('[data-em]').forEach(b=>b.classList.toggle('on',b===t));return}
+    if(t.dataset.del){await store.del(t.dataset.del);return openDay(k)}
+    if(t.dataset.shift){await setShift(k,who,t.dataset.shift);return openDay(k)}
+    if(t.id==='act')return openActivity(k);if(t.id==='addplan'){const v=$('#pt').value.trim();if(!v){$('#pt').focus();return}
+      await store.add({date:k,who,kind:'plan',title:v,emoji:em});return openDay(k)}
+  };
+}
+async function setShift(k,w,code,hours){
+  const old=events.filter(e=>e.date===k&&e.who===w&&e.kind==='shift');
+  await Promise.all(old.map(e=>store.del(e.id)));
+  await store.add({date:k,who:w,kind:'shift',code,...(hours?{hours}:{})});
+}
+
+function openRange(){
+  const t=ymd(new Date());
+  let h=`<h2>Subir horarios</h2>
+  <h3>Persona</h3><select id="rw"><option value="a">${esc(names.a)}</option><option value="b">${esc(names.b)}</option></select>
+  <h3>Turno</h3><select id="rs">${Object.keys(SHIFTS).map(c=>`<option value="${c}">${SHIFTS[c].l}${SHIFTS[c].t?' ('+SHIFTS[c].t+')':''}</option>`).join('')}</select>
+  <h3>Desde y hasta</h3><div class="f"><input type="date" id="r1" value="${t}"><input type="date" id="r2" value="${t}"></div>
+  <h3>Días de la semana</h3><div class="row" id="rd">${['L','M','X','J','V','S','D'].map((l,i)=>`<button class="chip on" data-i="${(i+1)%7}">${l}</button>`).join('')}</div>
+  <button class="full" id="go">Aplicar al calendario</button>
+  <h3>Nombres</h3><div class="f"><input id="na" value="${esc(names.a)}" maxlength="14"><input id="nb" value="${esc(names.b)}" maxlength="14"></div>
+  <button class="chip" id="sn" style="margin-top:8px">Guardar nombres</button>`;
+  openSheet(h);
+  const sh=$('#sheet');
+  sh.onclick=async e=>{
+    const t=e.target.closest('button');if(!t)return;
+    if(t.dataset.i!==undefined){t.classList.toggle('on');return}
+    if(t.id==='sn'){names={a:$('#na').value.trim()||'Dani',b:$('#nb').value.trim()||'Eva'};await store.setNames(names);render();return openRange()}
+    if(t.id==='go'){
+      const a=$('#r1').value,b=$('#r2').value;if(!a||!b||a>b){$('#r2').focus();return}
+      const on=[...sh.querySelectorAll('#rd .on')].map(x=>+x.dataset.i);
+      const w=$('#rw').value,c=$('#rs').value,days=[];
+      for(let d=parse(a);ymd(d)<=b&&days.length<400;d.setDate(d.getDate()+1))if(on.includes(d.getDay()))days.push(ymd(d));
+      t.disabled=true;t.textContent='Guardando…';
+      for(let i=0;i<days.length;i+=8)await Promise.all(days.slice(i,i+8).map(k=>setShift(k,w,c)));
+      closeSheet();
+    }
+  };
+}
+
+function openActivity(day){
+  let em=EMOJIS[0];
+  openSheet(`<h2>Añadir actividad</h2>
+  <h3>¿De quién?</h3><div class="row" id="aw">${whoChips()}</div>
+  <h3>Actividad</h3><input id="an" placeholder="Airsoft, veterinario, cena…" maxlength="40">
+  <h3>Emoji</h3><div class="row" id="ae">${EMOJIS.map((e,i)=>`<button class="chip${i?'':' on'}" data-em="${e}">${e}</button>`).join('')}</div>
+  <h3>Día</h3><input type="date" id="ad" value="${day||ymd(new Date())}">
+  <h3>Horas (opcional)</h3><div class="f"><input type="time" id="a1" aria-label="Desde"><input type="time" id="a2" aria-label="Hasta"></div>
+  <button class="full" id="ag">Añadir al calendario</button><div id="ar" class="empty" style="margin-top:10px"></div>`);
+  $('#sheet').onclick=async e=>{
+    const t=e.target.closest('button');if(!t)return;
+    if(t.dataset.who){who=t.dataset.who;$('#aw').innerHTML=whoChips();return}
+    if(t.dataset.em){em=t.dataset.em;$('#ae').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===t));return}
+    if(t.id!=='ag')return;
+    const n=$('#an').value.trim(),d=$('#ad').value,a=$('#a1').value,b=$('#a2').value,r=$('#ar');
+    if(!n){r.textContent='Escribe el nombre de la actividad.';$('#an').focus();return}
+    if(!d){r.textContent='Elige el día.';return}
+    t.disabled=true;
+    try{await store.add({date:d,who,kind:'plan',title:n,emoji:em,...(a?{hours:b?a+'–'+b:a}:{})})}
+    catch(x){r.textContent='No se pudo guardar. Comprueba que tienes permiso de edición.';t.disabled=false;return}
+    closeSheet();
+    const nd=parse(d);view=new Date(nd.getFullYear(),nd.getMonth(),1);if(mode==='week')wk=monday(nd);render();
+  };
+}
+function openPaste(){
+  const ym=view.getFullYear()+'-'+String(view.getMonth()+1).padStart(2,'0');
+  openSheet(`<h2>Pegar horarios</h2>
+  <div class="empty">Una línea por día o rango: <b>1 T</b>, <b>5-9 M</b>, <b>24-25 FM</b>, <b>8 L</b> (libre) o con horas <b>3 13:55-20:00</b>.</div>
+  <h3>Persona</h3><select id="xw"><option value="a">${esc(names.a)}</option><option value="b">${esc(names.b)}</option></select>
+  <h3>Mes</h3><input type="month" id="xm" value="${ym}">
+  <h3>Horarios</h3><textarea id="xt" rows="9" placeholder="1-2 T&#10;5-9 M"></textarea>
+  <button class="full" id="xg">Aplicar al calendario</button><div id="xr" class="empty" style="margin-top:10px"></div>`);
+  $('#sheet').onclick=async e=>{
+    const t=e.target.closest('button');if(!t||t.id!=='xg')return;
+    const [Y,M]=($('#xm').value||ym).split('-').map(Number),nd=new Date(Y,M,0).getDate(),w=$('#xw').value,items=[],bad=[];
+    $('#xt').value.split(/\n|;/).map(x=>x.trim()).filter(Boolean).forEach(l=>{
+      const m=l.match(/^(\d{1,2})(?:\s*-\s*(\d{1,2}))?\s+(.+)$/);
+      if(!m){bad.push(l);return}
+      const a=+m[1],b=+(m[2]||m[1]),c=m[3].trim().toUpperCase();
+      const h=c.match(/^(\d{1,2}):(\d{2})\s*[-–A]\s*(\d{1,2}):(\d{2})$/);
+      if(a<1||b>nd||a>b||!(SHIFTS[c]||h)){bad.push(l);return}
+      for(let d=a;d<=b;d++)items.push(h?{d,c:'H',h:`${+h[1]}:${h[2]}–${+h[3]}:${h[4]}`}:{d,c});
+    });
+    if(!items.length){$('#xr').textContent='No he entendido ninguna línea. Usa el formato de arriba.';return}
+    t.disabled=true;t.textContent='Guardando…';
+    for(let i=0;i<items.length;i+=8)await Promise.all(items.slice(i,i+8).map(x=>setShift(ymd(new Date(Y,M-1,x.d)),w,x.c,x.h)));
+    t.disabled=false;t.textContent='Aplicar al calendario';
+    if(bad.length)$('#xr').textContent='Aplicado, salvo estas líneas: '+bad.join(' | ');else closeSheet();
+  };
+}
+async function openPhoto(){
+  const ym=view.getFullYear()+'-'+String(view.getMonth()+1).padStart(2,'0');
+  openSheet(`<h2>Foto de la planilla</h2>
+  <div class="empty">Haz una foto nítida del cuadrante del mes. Claude lee los turnos y te los muestra para revisarlos antes de guardarlos. Gasta un poco de tu cuota de Claude.</div>
+  <h3>Persona</h3><select id="pw"><option value="a">${esc(names.a)}</option><option value="b">${esc(names.b)}</option></select>
+  <h3>Mes de la planilla</h3><input type="month" id="pm" value="${ym}">
+  <h3>Nombre en la planilla (si hay varias filas)</h3><input id="pn" maxlength="30" placeholder="Opcional">
+  <h3>Foto</h3><input type="file" id="pf" accept="image/*">
+  <button class="full" id="pg">Leer planilla</button><button class="chip" id="pp" style="margin-top:8px">Pegar horarios en texto</button><div id="pr" class="empty" style="margin-top:10px"></div>`);
+  let pend=null;
+  const sh=$('#sheet'),say=h=>{$('#pr').innerHTML=h};
+  sh.onclick=async e=>{
+    const t=e.target.closest('button');if(!t)return;
+    if(t.id==='pa'&&pend){t.disabled=true;t.textContent='Guardando…';
+      for(let i=0;i<pend.items.length;i+=8)await Promise.all(pend.items.slice(i,i+8).map(x=>setShift(ymd(new Date(pend.Y,pend.M-1,x.d)),pend.w,x.c)));
+      closeSheet();return}
+    if(t.id==='pp')return openPaste();if(t.id!=='pg')return;
+    const f=$('#pf').files[0];if(!f){say('Elige primero una foto.');return}
+    const pm=$('#pm').value;if(!pm){say('Elige el mes de la planilla.');return}
+    let sample=null,lim=null;
+    try{sample=await claude.use('sample');lim=sample&&await sample.limits()}catch(x){}
+    if(!lim||!lim.images){say('Leer fotos no está disponible aquí. Usa Subir horarios.');return}
+    const [Y,M]=pm.split('-').map(Number),nd=new Date(Y,M,0).getDate(),nm=$('#pn').value.trim(),w=$('#pw').value;
+    t.disabled=true;say('Leyendo la planilla…');
+    const q=`Esta imagen es la planilla de turnos de trabajo de un mes con ${nd} días. ${nm?`Lee solo la fila o columna de "${nm}".`:'Si hay varias personas y no está claro cuál es, usa la primera.'} Responde SOLO con un array JSON de objetos {"d": día del mes (1-${nd}), "c": código}. Códigos válidos: M (mañana 7-15), T (tarde 15-23), N (noche 23-7), FM, FT, FN (turnos de 12 h de fin de semana: mañana, tarde, noche), L (libre, descanso, vacaciones o festivo libre). Omite las casillas vacías o que no puedas leer con seguridad. Ejemplo: [{"d":1,"c":"M"},{"d":2,"c":"L"}]`;
+    try{
+      const r=await sample.json(q,{images:f}),seen={},items=[];
+      (Array.isArray(r)?r:[]).forEach(x=>{const d=+x.d,c=String(x.c||'').toUpperCase();if(d>=1&&d<=nd&&SHIFTS[c]&&!seen[d]){seen[d]=1;items.push({d,c})}});
+      items.sort((a,b)=>a.d-b.d);
+      if(!items.length)say('No he encontrado turnos. Prueba con una foto más cercana y recta.');
+      else{pend={Y,M,w,items};say(`<b>He leído ${items.length} de ${nd} días.</b> Revísalos antes de aplicar:<div class="row" style="margin-top:8px">${items.map(x=>`<span class="chip" style="padding:5px 9px;font-size:.85rem">${x.d} · ${x.c}</span>`).join('')}</div><button class="full" id="pa">Aplicar ${items.length} turnos</button><div class="empty" style="margin-top:6px">Sustituye el turno de esos días para ${esc(w==='a'?names.a:names.b)}.</div>`)}
+    }catch(x){say(({not_granted:'Has rechazado el permiso. Vuelve a probar y acepta.',rate_limited:'Demasiadas peticiones seguidas. Espera un momento.',invalid_json:'No he podido leer la tabla. Prueba con una foto más nítida.',image_rejected:'No puedo usar esa imagen. Prueba con otra foto JPG o PNG.'})[x&&x.code]||'No se pudo leer la planilla. Inténtalo de nuevo.')}
+    t.disabled=false;
+  };
+}
+
+/* ---------- Supabase ---------- */
+const norm=x=>({id:String(x.id),date:x.date,who:x.who,kind:x.kind,code:x.code||undefined,hours:x.hours||undefined,title:x.title||undefined,emoji:x.emoji||undefined});
+function sbHeaders(k,extra){return{apikey:SB_KEY,...(SB_KEY.startsWith('eyJ')?{Authorization:'Bearer '+SB_KEY}:{}),'x-cal-key':k,'Content-Type':'application/json',...extra}}
+async function check(k){const r=await fetch(SB_URL+'/rest/v1/rpc/cal_ok',{method:'POST',headers:sbHeaders(k),body:'{}'});if(!r.ok)throw new Error('http');return (await r.json())===true}
+function remoteStore(k){
+  const api=(path,opt={})=>fetch(SB_URL+'/rest/v1/'+path,{...opt,headers:sbHeaders(k,opt.headers)});
+  let cb=()=>{},ncb=()=>{},list=[],tm=0;
+  const pull=async()=>{
+    const r=await api('events?select=*&order=date');if(!r.ok)throw new Error('http');
+    list=(await r.json()).map(norm);cb(list);
+    const n=await (await api('settings?id=eq.names&select=a,b')).json();
+    if(n&&n[0]&&n[0].a)ncb({a:n[0].a,b:n[0].b});
+  };
+  const later=()=>{clearTimeout(tm);tm=setTimeout(()=>pull().catch(()=>{}),400)};
+  return{shared:true,
+    subscribe(f){cb=f;pull().catch(()=>{$('#st').textContent='Sin conexión con el calendario'});
+      setInterval(()=>{if(!document.hidden)pull().catch(()=>{})},8000);
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden)pull().catch(()=>{})})},
+    async add(e){const r=await api('events',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(e)});if(!r.ok)throw new Error('http');list=[...list,norm((await r.json())[0])];cb(list);later()},
+    async del(id){const r=await api('events?id=eq.'+encodeURIComponent(id),{method:'DELETE'});if(!r.ok)throw new Error('http');list=list.filter(x=>x.id!==id);cb(list);later()},
+    async setNames(n){await api('settings',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:'names',a:n.a,b:n.b})})},
+    loadNames(f){ncb=f}};
+}
+function gate(msg){
+  const g=document.createElement('div');g.className='back on';g.style.zIndex=9;
+  g.innerHTML=`<div class="sheet"><h2>Nuestro calendario</h2><div class="empty">Escribe la contraseña para entrar.</div><input id="gk" type="password" autocomplete="current-password" style="margin-top:10px"><div id="ge" class="empty" style="color:#c0392b">${msg||''}</div><button class="full" id="gb">Entrar</button></div>`;
+  document.body.appendChild(g);
+  const go=async()=>{const k=$('#gk').value;if(!k)return;
+    try{if(await check(k)){try{localStorage.setItem('cal-key',k)}catch(e){}g.remove();start(remoteStore(k))}else $('#ge').textContent='Contraseña incorrecta.'}
+    catch(e){$('#ge').textContent='No se pudo conectar. Revisa la URL y la clave de Supabase.'}};
+  $('#gb').onclick=go;$('#gk').onkeydown=e=>{if(e.key==='Enter')go()};
+}
+/* ---------- arranque ---------- */
+$('#grid').addEventListener('click',e=>{const c=e.target.closest('.cell,.wrow');if(c)openDay(c.dataset.d)});
+const step=n=>{if(mode==='week'){wk=new Date(wk);wk.setDate(wk.getDate()+7*n)}else{view=new Date(view.getFullYear(),view.getMonth()+n,1)}render()};
+$('#prev').onclick=()=>step(-1);$('#next').onclick=()=>step(1);
+$('#today').onclick=()=>{view=new Date();view.setDate(1);wk=monday(new Date());render()};
+$('#seg').onclick=e=>{const b=e.target.closest('button');if(!b||b.dataset.m===mode)return;mode=b.dataset.m;
+  if(mode==='week'){const n=new Date();wk=monday(n.getMonth()===view.getMonth()&&n.getFullYear()===view.getFullYear()?n:new Date(view.getFullYear(),view.getMonth(),1))}
+  else view=new Date(wk.getFullYear(),wk.getMonth(),1);
+  render()};
+$('#open-photo').onclick=openPaste;
+$('#open-act').onclick=()=>openActivity();
+$('#open-range').onclick=openRange;
+
+function start(s){
+  store=s;
+  s.loadNames(n=>{names=n;render()});
+  s.subscribe(l=>{events=l;render()});
+  $('#st').textContent=s.shared?'Calendario compartido (se actualiza solo)':'Guardado solo en este dispositivo';
+}
+render();
+if(SB_URL.startsWith('PEGA')){$('#st').textContent='Falta configurar SB_URL y SB_KEY al principio del script.'}
+else{let k='';try{k=localStorage.getItem('cal-key')||''}catch(e){}
+  if(!k)gate();else check(k).then(ok=>ok?start(remoteStore(k)):gate('La contraseña ha cambiado.')).catch(()=>start(remoteStore(k)))}
+</script>
+</body>
+</html>
